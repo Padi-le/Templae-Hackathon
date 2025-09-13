@@ -15,6 +15,8 @@ the backend folder is structured as follows
 ├── ChatBotapi.js #use to host the server for the chatbot and global chat 
 ├──/css
     ├──ChatBot.css
+    ├──dashboard.css
+    ├──login.css
 ├──chatbot.js
 
 /frontend
