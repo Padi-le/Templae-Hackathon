@@ -1,16 +1,49 @@
 // server.js
-import express from "express";
-import fetch from "node-fetch"; 
-import rateLimit from "express-rate-limit";
+import express from 'express';
+import rateLimit from 'express-rate-limit';
+import dotenv from 'dotenv';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+// Load environment variables from .env file
+dotenv.config();
+
+
+// Initialize Gemini AI
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const app = express();
 app.use(express.json());
 
+// Enable CORS for your PHP frontend
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*'); // In production, replace * with your domain
+  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // simple rate limit
 app.use(rateLimit({ windowMs: 60*1000, max: 30 }));
 
-const PORT = process.env.PORT || 3000;
-const LLM_API_KEY = process.env.LLM_API_KEY; // store securely
+// Test route to verify API key
+app.get('/test-auth', (req, res) => {
+  const keyLastFour = GEMINI_API_KEY.slice(-4);
+  res.json({ 
+    status: 'API key loaded', 
+    message: `API key ending in ...${keyLastFour} is loaded`
+  });
+});
+
+const PORT = process.env.PORT || 3001;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+if (!GEMINI_API_KEY) {
+  console.error('Error: GEMINI_API_KEY is not set in environment variables');
+  process.exit(1);
+}
 
 // simple topic check - tune this list to your needs
 function isOffTopic(text) {
@@ -41,6 +74,7 @@ const fewShot = [
 
 app.post("/chat", async (req, res) => {
   try {
+    console.log('Received request:', req.body); // Add request logging
     const userMessage = (req.body.message || "").trim();
     if (!userMessage) return res.status(400).json({ error: "No message" });
 
@@ -51,45 +85,35 @@ app.post("/chat", async (req, res) => {
       });
     }
 
-    // build messages
-    const messages = [
-      { role: "system", content: systemPrompt },
-      ...fewShot,
-      { role: "user", content: userMessage }
-    ];
+    // Get the generative model
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    console.log('Received message:', userMessage); // Add logging
 
-    const llmResp = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${LLM_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini", 
-        messages,
-        max_tokens: 500,
-        temperature: 0.7
-      })
-    });
+    // Create the prompt with the system prompt and user message
+    const prompt = systemPrompt + "\n\nUser query: " + userMessage;
 
-    if (!llmResp.ok) {
-      const err = await llmResp.text();
-      console.error("LLM error:", err);
-      return res.status(500).json({ error: "LLM error" });
-    }
+    try {
+      // Generate content
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const assistantReply = response.text();
 
-    const data = await llmResp.json();
-    const assistantReply = data.choices?.[0]?.message?.content?.trim() ?? "";
+      if (!assistantReply || isOffTopic(assistantReply)) {
+        return res.json({
+          reply: "I'm sorry — I can only discuss meals and health. Ask me about recipes, nutrition, grocery lists or meal plans!"
+        });
+      }
 
-    if (!assistantReply || isOffTopic(assistantReply)) {
-      return res.json({
-        reply: "I'm sorry — I can only discuss meals and health. Ask me about recipes, nutrition, grocery lists or meal plans!"
+      res.json({ reply: assistantReply });
+    } catch (apiError) {
+      console.error('Gemini API Error:', apiError);
+      res.status(500).json({ 
+        error: "AI service error", 
+        details: apiError.message 
       });
     }
-
-    res.json({ reply: assistantReply });
   } catch (err) {
-    console.error(err);
+    console.error('Server Error:', err);
     res.status(500).json({ error: "Server error" });
   }
 });
