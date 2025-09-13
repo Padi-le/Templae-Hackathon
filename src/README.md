@@ -10,6 +10,7 @@ the program is structure in two folders backend and frontend
 the backend handles the logic of the project while the frontend handles the interface such as the gui and styling 
 
 the backend folder is structured as follows 
+```
 /backend
 ├── api.php # Main PHP API for user registration, login, and data handling
 ├── ChatBotapi.js #use to host the server for the chatbot and global chat 
@@ -20,5 +21,5 @@ the backend folder is structured as follows
 ├──chatbot.js
 
 /frontend
-
+```
 remember the setup intsructions for the .env files
