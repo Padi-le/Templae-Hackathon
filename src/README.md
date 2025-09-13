@@ -11,7 +11,7 @@ the backend handles the logic of the project while the frontend handles the inte
 
 the backend folder is structured as follows 
 /backend
-├── api.php # Main PHP API for user registration, login, and data handling
+├── api.php # Main PHP API for user registration, login, and data handling'''
 ├── ChatBotapi.js #use to host the server for the chatbot and global chat 
 ├──/css
     ├──ChatBot.css
