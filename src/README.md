@@ -6,20 +6,28 @@ responses from healthbot
 
 
 ## Project Structure
-the program is structure in two folders backend and frontend 
-the backend handles the logic of the project while the frontend handles the interface such as the gui and styling 
+the program is structure in two folders backend  
+the backend handles the logic of theproject and handles the interface such as the gui and styling 
 
 the backend folder is structured as follows 
 ```
 /backend
-├── api.php # Main PHP API for user registration, login, and data handling
-├── ChatBotapi.js #use to host the server for the chatbot and global chat 
-├──/css
-    ├──ChatBot.css
-    ├──dashboard.css
-    ├──login.css
-├──chatbot.js
+    ├── api.php # Main PHP API for user registration, login, and data handling
+    ├── ChatBotapi.js #use to host the server for the chatbot and global chat 
+    ├──/css
+        ├──ChatBot.css
+        ├──dashboard.css
+        ├──login.css
+        ├──register.css
+        ├──index.css
+        ├──footer.css
+    ├──chatbot.js
+    ├──ChatBot.php
+    ├──ChatRoo.php
+    ├──config.php
+    ├──dashboard.php
+    ├──header.php
+    ├──index.php
 
-/frontend
 ```
 remember the setup intsructions for the .env files
