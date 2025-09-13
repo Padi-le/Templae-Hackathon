@@ -1,6 +1,7 @@
 <?php
 include_once "config.php";
 
+
 class Api {
 
     private static $instance = null;
@@ -73,17 +74,18 @@ class Api {
         return $apiKey;
     }
 
-    private function addUser($name, $surname, $email, $password) {
+    private function addUser($name, $surname, $email, $password,$gender) {
         $apikey = $this->generateApiKey();
         $stmt = $this->conn->prepare("
             INSERT INTO users (email, password, name, Surname, Api_key)
-            VALUES (:email, :password, :name, :surname, :apikey)
+            VALUES (:email, :password, :name, :surname, :gender, :apikey)
         ");
 
         $stmt->bindValue(':email', $email, PDO::PARAM_STR);
         $stmt->bindValue(':password', $password, PDO::PARAM_STR);
         $stmt->bindValue(':name', $name, PDO::PARAM_STR);
         $stmt->bindValue(':surname', $surname, PDO::PARAM_STR);
+        $stmt->bindValue(':gender', $gender, PDO::PARAM_STR);
         $stmt->bindValue(':apikey', $apikey, PDO::PARAM_STR);
 
         if ($stmt->execute()) {
@@ -99,7 +101,7 @@ class Api {
         return password_hash($pass, PASSWORD_ARGON2ID, $options);
     }
 
-    private function handleRegister() {
+   private function handleRegister() {
         $data = $this->data;
 
         if (!isset($data['name']) || !$this->validateName($data['name'])) {
@@ -122,11 +124,16 @@ class Api {
             $this->respond("error", "Password format insufficient, unsafe.", 400);
         }
 
+        if (!isset($data['gender']) || !in_array(strtolower($data['gender']), ['male', 'female', 'other'])) {
+            $this->respond("error", "Invalid or missing gender", 400);
+        }
+
         $this->addUser(
             $data['name'],
             $data['surname'],
             $data['email'],
-            $this->hashPassword($data['password'])
+            $this->hashPassword($data['password']),
+            $data['gender']
         );
     }
 
@@ -225,7 +232,8 @@ class Api {
             $this->respond("error", "User not found", 404);
         $this->respond("success", $user, 200);
     }
-public function handleUpdateInfo(){
+
+    public function handleUpdateInfo(){
         $data = $this->data;
         if(!isset($data["api_key"]))
             $this->respond("error", "API key required", 401);
@@ -277,7 +285,7 @@ public function handleUpdateInfo(){
             echo "error in update";
         }
     }
-    
+
     private function handleOnline() {
         $data = $this->data;
 
