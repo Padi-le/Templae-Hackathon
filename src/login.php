@@ -30,5 +30,6 @@
                 <div id="formError" class="error"></div>
             </form>
         </div>
+        <?php include "footer.php";?>   
     </body>
 </html>
