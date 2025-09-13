@@ -11,6 +11,8 @@
         <title>Login</title>
         <link rel="stylesheet" href="css/login.css">
     </head>
+  <script src="login.js"></script>
+
     <body>
         <?php include "header.php";?>
         <div class="signup-container">

@@ -34,7 +34,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 })
             });
 
-            // 🔍 Show what the backend actually returned
             const rawText = await response.text();
             console.log("Raw response:", rawText);
 
