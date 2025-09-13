@@ -1,57 +1,78 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: #F9FbF9;
+    color: #333;
+    line-height: 1.6;
+}
+
 .form-container {
-    max-width: 500px;
-    margin: 30px auto;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 450px;
+    margin: 60px auto;
+    padding: 30px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
 }
 
 .form-container h1 {
-    font-family: 'Lora', serif;
     text-align: center;
-    margin-bottom: 20px;
-    color: #333;
+    margin-bottom: 25px;
+    color: #2E7D32;
+    font-weight: 600;
 }
 
-.form-container label {
-    font-family: 'Open Sans', sans-serif;
-    font-weight: bold;
-    margin-bottom: 8px;
+form#registerForm label {
     display: block;
-    color: #333;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #388E3C;
 }
 
-.form-container input,
-.form-container select {
+form#registerForm input,
+form#registerForm select {
     width: 100%;
-    padding: 10px;
+    padding: 12px 15px;
+    border: 1px solid #DDD;
+    border-radius: 6px;
     font-size: 16px;
-    border-radius: 4px;
-    border: 1px solid #aaa;
     margin-bottom: 20px;
-    box-sizing: border-box;
+    transition: border-color 0.3s;
 }
 
-.form-container button {
+form#registerForm input:focus,
+form#registerForm select:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+button#submitBtn {
     width: 100%;
     padding: 12px;
-    background-color: #0B1957;
+    background-color: #4CAF50;
     color: white;
-    font-size: 16px;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s;
 }
 
-.form-container button:hover {
-    background-color: #9ECCFA;
+button#submitBtn:hover {
+    background-color: #388E3C;
 }
 
 #error-message {
-    text-align: center;
-    color: red;
-    margin-top: 20px;
+    color: #D32F2F;
     font-size: 14px;
+    margin-top: 15px;
+    text-align: center;
+    display: block;
 }
