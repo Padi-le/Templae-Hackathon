@@ -1,0 +1,47 @@
+:root {
+    --primary-green: #2e7d32;
+    --light-green: #4caf50;
+    --lighter-green: #e8f5e9;
+    --dark-green: #1b5e20;
+    --white: #ffffff;
+    --text-dark: #333;
+    --text-light: #666;
+}
+
+.logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+    padding: 40px 20px;
+}
+
+.main-logo {
+    text-align: center;
+    animation: fadeIn 1s ease-in;
+}
+
+.main-logo i {
+    font-size: 5rem;
+    color: var(--primary-green);
+    margin-bottom: 20px;
+    display: block;
+}
+
+.main-logo h1 {
+    font-size: 3rem;
+    color: var(--primary-green);
+    margin-bottom: 15px;
+    font-weight: 700;
+}
+
+@keyframes fadeIn {
+    from{
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to{
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
