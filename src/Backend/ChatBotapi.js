@@ -86,7 +86,7 @@ app.post("/chat", async (req, res) => {
     }
 
     // Get the generative model
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     console.log('Received message:', userMessage); // Add logging
 
     // Create the prompt with the system prompt and user message
@@ -103,7 +103,7 @@ app.post("/chat", async (req, res) => {
           reply: "I'm sorry — I can only discuss meals and health. Ask me about recipes, nutrition, grocery lists or meal plans!"
         });
       }
-
+      console.log(assistantReply);
       res.json({ reply: assistantReply });
     } catch (apiError) {
       console.error('Gemini API Error:', apiError);
