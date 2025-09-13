@@ -146,7 +146,7 @@ class Api {
         }
 
         $stmt = $this->conn->prepare("
-            SELECT name, surname, apikey, password
+            SELECT  id, name, surname, api_key, password, last_logged_in, streaks
             FROM users WHERE email = :email
         ");
         $stmt->bindValue(':email', $data['email'], PDO::PARAM_STR);
@@ -156,17 +156,50 @@ class Api {
         if (!$user) {
             $this->respond("error", "User not found", 404);
         }
-
-        if (password_verify($data['password'], $user['Password'])) {
-            $this->respond("success", [
-                'apikey' => $user['Api_key'],
-                'name' => $user['FirstName'],
-                'surname' => $user['LastName'],
-                'user_type' => $user['Type'] ?? null
-            ], 200);
-        } else {
-            $this->respond("error", "Password incorrect", 400);
+        if (!password_verify($data['password'], $user['password'])) {
+        $this->respond("error", "Password incorrect", 400);
         }
+        $lastLogin = $user['last_logged_in'] ? new DateTime($user['last_logged_in']) : null;
+        $today = new DateTime('today');
+        $streak = $user['streaks'] ?? 0;
+
+        if ($lastLogin) {
+            $diff = $today->diff($lastLogin)->days;
+            if ($diff == 1) {
+                $streak++;
+            } elseif ($diff > 1) {
+                $streak = 1;
+            }
+
+        } else {
+            $streak = 1; 
+        }
+
+        $stmt = $this->conn->prepare("
+            UPDATE users SET streaks = :streaks, last_logged_in = NOW() WHERE id = :id
+        ");
+        $stmt->bindValue(':streaks', $streak, PDO::PARAM_INT);
+        $stmt->bindValue(':id', $user['id'], PDO::PARAM_INT);
+        $stmt->execute();
+
+        $this->respond("success", [
+            'apikey' => $user['api_key'],
+            'name' => $user['name'],
+            'surname' => $user['surname'],
+            'streak' => $streak
+        ], 200);
+        // if (password_verify($data['password'], $user['Password'])) {
+        //     $this->respond("success", [
+        //         'apikey' => $user['Api_key'],
+        //         'name' => $user['FirstName'],
+        //         'surname' => $user['LastName'],
+                
+        //     ], 200);
+        // } else {
+        //     $this->respond("error", "Password incorrect", 400);
+        // }
+
+
     }
 
     public function handleRequest() {
