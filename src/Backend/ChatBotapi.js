@@ -12,9 +12,37 @@ dotenv.config();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const app = express();
+import  http from 'http';
+const server = http.createServer(app);
+import { Server } from "socket.io";
+
+const io = new Server(server, {
+  cors: {
+    origin: "*", 
+  },
+});
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+app.use(express.static(join(__dirname, 'public')));
 app.use(express.json());
 
-// Enable CORS for your PHP frontend
+io.on('connection', (socket) => {
+        console.log('A user connected');
+
+        socket.on('disconnect', () => {
+            console.log('User disconnected');
+        });
+
+        socket.on('chat message', (msg) => {
+            console.log('message: ' + msg);
+            io.emit('chat message', msg); // Broadcast to all connected clients
+        });
+    });
+
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*'); // In production, replace * with your domain
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -25,10 +53,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// simple rate limit
 app.use(rateLimit({ windowMs: 60*1000, max: 30 }));
 
-// Test route to verify API key
 app.get('/test-auth', (req, res) => {
   const keyLastFour = GEMINI_API_KEY.slice(-4);
   res.json({ 
@@ -45,7 +71,6 @@ if (!GEMINI_API_KEY) {
   process.exit(1);
 }
 
-// simple topic check - tune this list to your needs
 function isOffTopic(text) {
   const off = [
     "politic", "president", "election", "salary", "bank", "bitcoin",
@@ -64,7 +89,6 @@ Do not give medical diagnoses. For medical questions, include a short disclaimer
 Keep answers friendly and concise (max ~300 words).include groceries list at the end of response if applicable
 `;
 
-// few-shot examples
 const fewShot = [
   {role: "user", content: "Can you give me a quick vegetarian dinner under 30 minutes?"},
   {role: "assistant", content: "Sure — try a chickpea & spinach stir-fry: sauté onion and garlic, add spices, canned chickpeas, spinach... (full steps)"},
@@ -118,4 +142,7 @@ app.post("/chat", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`AI chat API running on port ${PORT}`));
+
+server.listen(PORT, () => console.log(`AI chat API running on port ${PORT}`));
+
+// app.listen(PORT, () => console.log(`AI chat API running on port ${PORT}`));

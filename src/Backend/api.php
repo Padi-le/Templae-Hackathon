@@ -1,6 +1,7 @@
 <?php
 include_once "config.php";
 
+
 class Api {
 
     private static $instance = null;
@@ -73,17 +74,18 @@ class Api {
         return $apiKey;
     }
 
-    private function addUser($name, $surname, $email, $password) {
+    private function addUser($name, $surname, $email, $password,$gender) {
         $apikey = $this->generateApiKey();
         $stmt = $this->conn->prepare("
             INSERT INTO users (email, password, name, Surname, Api_key)
-            VALUES (:email, :password, :name, :surname, :apikey)
+            VALUES (:email, :password, :name, :surname, :gender, :apikey)
         ");
 
         $stmt->bindValue(':email', $email, PDO::PARAM_STR);
         $stmt->bindValue(':password', $password, PDO::PARAM_STR);
         $stmt->bindValue(':name', $name, PDO::PARAM_STR);
         $stmt->bindValue(':surname', $surname, PDO::PARAM_STR);
+        $stmt->bindValue(':gender', $gender, PDO::PARAM_STR);
         $stmt->bindValue(':apikey', $apikey, PDO::PARAM_STR);
 
         if ($stmt->execute()) {
@@ -99,7 +101,7 @@ class Api {
         return password_hash($pass, PASSWORD_ARGON2ID, $options);
     }
 
-    private function handleRegister() {
+   private function handleRegister() {
         $data = $this->data;
 
         if (!isset($data['name']) || !$this->validateName($data['name'])) {
@@ -122,11 +124,16 @@ class Api {
             $this->respond("error", "Password format insufficient, unsafe.", 400);
         }
 
+        if (!isset($data['gender']) || !in_array(strtolower($data['gender']), ['male', 'female', 'other'])) {
+            $this->respond("error", "Invalid or missing gender", 400);
+        }
+
         $this->addUser(
             $data['name'],
             $data['surname'],
             $data['email'],
-            $this->hashPassword($data['password'])
+            $this->hashPassword($data['password']),
+            $data['gender']
         );
     }
 
@@ -146,7 +153,7 @@ class Api {
         }
 
         $stmt = $this->conn->prepare("
-            SELECT  id, name, surname, api_key, password, last_logged_in, streaks
+            SELECT  id, name, surname, api_key, password, last_logged_in, streaks,points
             FROM users WHERE email = :email
         ");
         $stmt->bindValue(':email', $data['email'], PDO::PARAM_STR);
@@ -162,13 +169,16 @@ class Api {
         $lastLogin = $user['last_logged_in'] ? new DateTime($user['last_logged_in']) : null;
         $today = new DateTime('today');
         $streak = $user['streaks'] ?? 0;
+        $points = $user['points'] ?? 10;
 
         if ($lastLogin) {
             $diff = $today->diff($lastLogin)->days;
             if ($diff == 1) {
                 $streak++;
+                $points = $points + 10 ;
             } elseif ($diff > 1) {
                 $streak = 1;
+                $points = $points -10 ;
             }
 
         } else {
@@ -176,9 +186,11 @@ class Api {
         }
 
         $stmt = $this->conn->prepare("
-            UPDATE users SET streaks = :streaks, last_logged_in = NOW() WHERE id = :id
+            UPDATE users SET streaks = :streaks, last_logged_in = NOW() ,points = :points WHERE id = :id
         ");
+
         $stmt->bindValue(':streaks', $streak, PDO::PARAM_INT);
+        $stmt->bindValue(':points',$points, PDO::PARAM_INT);
         $stmt->bindValue(':id', $user['id'], PDO::PARAM_INT);
         $stmt->execute();
 
@@ -186,7 +198,8 @@ class Api {
             'apikey' => $user['api_key'],
             'name' => $user['name'],
             'surname' => $user['surname'],
-            'streak' => $streak
+            'streak' => $streak,
+            'Points'=>$points
         ], 200);
         // if (password_verify($data['password'], $user['Password'])) {
         //     $this->respond("success", [
@@ -201,6 +214,97 @@ class Api {
 
 
     }
+    
+    public function handleGetInfo(){
+        $data = $this->data;
+        if(!isset($this->data["api_key"]))
+            $this->respond("error", "API key required", 401);
+        $stmt = $this->conn->prepare("SELECT COUNT(*) FROM users WHERE api_key = :api_key");
+        $stmt->bindValue(":api_key", $this->data["api_key"], PDO::PARAM_STR);
+        $stmt->execute();
+        if($stmt->fetchColumn() === 0)
+            $this->respond("error", "Invalid API key", 401);
+        $stmt = $this->conn->prepare("SELECT id, last_logged_in, name, email, surname, api_key, streaks, points, gender, online FROM users WHERE api_key = :api_key");
+        $stmt->bindValue(':api_key', $data['api_key'], PDO::PARAM_STR);
+        $stmt->execute();
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        if(!$user)
+            $this->respond("error", "User not found", 404);
+        $this->respond("success", $user, 200);
+    }
+
+    public function handleUpdateInfo(){
+        $data = $this->data;
+        if(!isset($data["api_key"]))
+            $this->respond("error", "API key required", 401);
+        //dynamically building the query
+        $allowedFields = ["name", "surname", "email", "streaks", "points", "gender", "online"];
+        $updatedFields = [];
+        $params = [":api_key" => $data["api_key"]];
+        
+        foreach($allowedFields as $field){
+            if(isset($data[$field])){
+                if ($field === 'email' && !$this->validateEmail($data[$field]))
+                    $this->respond("error", "Invalid email format", 400);
+                if ($field === 'name' && !$this->validateName($data[$field]))
+                    $this->respond("error", "Invalid name format", 400);
+                if ($field === 'surname' && !$this->validateName($data[$field]))
+                    $this->respond("error", "Invalid surname format", 400);
+                if ($field === 'online' && (!$data[$field] === "TRUE" || !$data[$field] === "FALSE"))
+                    $this->respond("error", "Online must be boolean", 400);
+                
+                $updateFields[] = "$field = :$field";
+                $params[":$field"] = $data[$field];
+            }
+        }
+
+        if(empty($updateFields))
+            $this->respond("error", "No valid fields provided for update", 400);
+
+        $query = "UPDATE users SET " . implode(', ', $updateFields) . " WHERE api_key = :api_key";
+        $stmt = $this->conn->prepare($query);
+
+        foreach($params as $key => $value){
+            $paramType = is_int($value) ? PDO::PARAM_INT : PDO::PARAM_STR;
+            $stmt->bindValue($key, $value, $paramType);
+        }
+        try{
+            if ($stmt->execute()){
+                $stmt = $this->conn->prepare("SELECT id, last_logged_in, name, email, surname, api_key, streaks, points, gender, online FROM users WHERE api_key = :api_key");
+                $stmt->bindValue(":api_key", $data["api_key"], PDO::PARAM_STR);
+                $stmt->execute();
+                $updatedUser = $stmt->fetch(PDO::FETCH_ASSOC);
+    
+                $this->respond("success", $updatedUser, 200);
+            } else {
+                $errorInfo = $stmt->errorInfo();
+                $this->respond("error", $errorInfo[2], 500);
+            }
+        }
+        catch(error){
+            echo "error in update";
+        }
+    }
+
+    private function handleOnline() {
+        $data = $this->data;
+
+        if(!isset($data['api_key']))
+        {
+            $this->respond("error", "API key missing", 400);
+        }
+
+        $stmt = $this->conn->prepare("
+            SELECT COUNT(*) FROM users WHERE online = TRUE;
+        ");
+
+        $stmt->execute();
+
+        $this->respond("success", [
+            'online_users' => $stmt->fetchColumn()
+        ], 200);
+    }
+
 
     public function handleRequest() {
         $data = $this->data;
@@ -215,6 +319,15 @@ class Api {
                 break;
             case "Login":
                 $this->handleLogin();
+                break;
+            case "GetInfo":
+                $this->handleGetInfo();
+                break;
+            case "UpdateInfo":
+                $this->handleUpdateInfo();
+                break;
+            case "CheckOnline":
+                $this->handleOnline();
                 break;
             default:
                 $this->respond('error', 'Invalid Request Type', 400);
