@@ -1,0 +1,127 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+:root {
+    --primary-green: #2E7D32;
+    --light-green: #4CAF50;
+    --lighter-green: #E8F5E9;
+    --dark-green: #1B5E20;
+    --white: #FFFFFF;
+    --text-dark: #333;
+    --text-light: #666;
+    --shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    padding-top: 80px;
+}
+
+.header {
+    width: 100%;
+    background-color: var(--white);
+    box-shadow: var(--shadow);
+    padding: 15px 0;
+    position: fixed;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--primary-green);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.5rem;
+}
+
+.logo i {
+    font-size: 1.8rem;
+}
+
+.nav-links {
+    display: flex;
+    gap: 25px;
+}
+
+.nav-links a {
+    color: var(--text-dark);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s;
+    position: relative;
+    padding: 5px 0;
+}
+
+.nav-links a:hover {
+    color: var(--primary-green);
+}
+
+.nav-links a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: var(--primary-green);
+    transition: width 0.3s;
+}
+
+.nav-links a:hover::after {
+    width: 100%;
+}
+
+.nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.login-btn {
+    padding: 8px 20px;
+    background-color: var(--primary-green);
+    color: var(--white);
+    border: none;
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.login-btn:hover {
+    background-color: var(--dark-green);
+}
+
+.signup-btn {
+    padding: 8px 20px;
+    background-color: transparent;
+    color: var(--primary-green);
+    border: 1px solid var(--primary-green);
+    border-radius: 4px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.signup-btn:hover {
+    background-color: var(--lighter-green);
+}
