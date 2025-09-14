@@ -23,7 +23,7 @@ node ChatBotapi.js
 ```
 Check out the Demos: 
 - [Demo Video](../demo/Demo,Memento.mp4)
-- [Demo Presentation](../demo/demo.pptx)
+- [Demo Presentation](../demo/HealthBot_Hackathon_DemoSlides.pptx)
 
 ## 📌 Notes
 ``` c
