@@ -10,6 +10,7 @@
     <title>MealHealthBot - Your Nutrition Assistant</title>
     <link rel="stylesheet" href="css/ChatBot.css">
 </head>
+<?php include "header.php";?>
 <body>
     <div class="chat-container">
         <div class="chat-header">
@@ -55,4 +56,5 @@
 
     <script src="ChatBot.js"></script>
 </body>
+
 </html>
